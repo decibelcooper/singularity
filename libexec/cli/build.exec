@@ -253,7 +253,14 @@ case $SINGULARITY_BUILDDEF in
 
         for i in `cat "$SINGULARITY_CONTENTS"`; do
             message 1 "Importing: $i\n"
+            SINGULARITY_ROOTFS_RO_DIRS=$(find $SINGULARITY_ROOTFS -type d ! -writable)
+            if [ -n "$SINGULARITY_ROOTFS_RO_DIRS" ]; then
+                chmod u+w $SINGULARITY_ROOTFS_RO_DIRS
+            fi
             zcat "$i" | (cd "$SINGULARITY_ROOTFS"; tar --exclude=dev/* -xf - ) || exit $?
+            if [ -n "$SINGULARITY_ROOTFS_RO_DIRS" ]; then
+                chmod u-w $SINGULARITY_ROOTFS_RO_DIRS
+            fi
         done
 
         SINGULARITY_BUILDDEF="$SINGULARITY_ROOTFS"
