@@ -263,7 +263,14 @@ case $SINGULARITY_BUILDDEF in
             name=`basename "$i"`
             message 1 "Exploding layer: $name\n"
             if [ ! -z "${OLD_EXTRACTION:-}" ]; then
+                SINGULARITY_ROOTFS_RO_DIRS=$(find $SINGULARITY_ROOTFS -type d ! -writable)
+                if [ -n "$SINGULARITY_ROOTFS_RO_DIRS" ]; then
+                    chmod u+w $SINGULARITY_ROOTFS_RO_DIRS
+                fi
                 zcat "$i" | (cd "$SINGULARITY_ROOTFS"; tar --exclude=dev/* -xf -) || exit $?
+                if [ -n "$SINGULARITY_ROOTFS_RO_DIRS" ]; then
+                    chmod u-w $SINGULARITY_ROOTFS_RO_DIRS
+                fi
             else
                 $SINGULARITY_libexecdir/singularity/bin/docker-extract "$i" || exit $?
             fi
